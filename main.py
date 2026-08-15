@@ -3,9 +3,6 @@ from ttkbootstrap.constants import *
 
 from gui import Gui
 
-import subprocess
-process = subprocess.Popen(["python", "guiscript.py"])
-
 def main():
     width, height = 1000, 700
 
