@@ -10,10 +10,8 @@ from datetime import datetime
 import logic
 import json
 import os
-fp = os.path.join(os.path.dirname(os.path.abspath(__file__)),'data.json')
 
 class GuiScript():
-    global fp
     def __init__(self,w,gui):
         self.w = w
         self.gui = gui
@@ -35,6 +33,12 @@ class GuiScript():
             elif savemsg is None:
                 return
         self.w.destroy()
+    def NotebookTabChange(self,event):
+        notebook = event.widget
+        selected_tab = notebook.select()
+        
+        if selected_tab == str(self.gui.MainFrame):
+            self.UpdateDataGui()
     def UpdateDataGui(self):
         # stock
         self.gui.StockList.delete(*self.gui.StockList.get_children())
@@ -72,6 +76,7 @@ class GuiScript():
 
         # main
         SalesSummary = {} # format>> Date: total profit, customers, sales
+        OrderedDateIndex = []
         AllCustomers = 0
         AllProfit = 0
         for s in self.JsonData['Sale']:
@@ -81,14 +86,22 @@ class GuiScript():
                     'Customers' : 1,
                     'Sales' : sum(item['Quantity'] for item in s['Items'])
                 }
+                OrderedDateIndex.append(s['Date'])
             else:
                 SalesSummary[s['Date']]['TotalProfit'] += s['Profit']
                 SalesSummary[s['Date']]['Customers'] += 1
                 SalesSummary[s['Date']]['Sales'] += sum(item['Quantity'] for item in s['Items'])
             AllCustomers += 1
             AllProfit += s['Profit']
+        OrderedDateIndex.sort(key=lambda x: datetime.strptime(x, "%d/%m/%Y"))
+        deltaDays = logic.DeltaDateInDays(OrderedDateIndex[0],OrderedDateIndex[-1]) + 1 if len(OrderedDateIndex) > 0 else 0
+
+        # Count for total days
+        OperatingDaysPerWeek = self.gui.OperatingDaysInput.get()
+        deltaWeeks = deltaDays//7
+        Days = len(OrderedDateIndex) if deltaDays < 7 and deltaDays > OperatingDaysPerWeek else (deltaWeeks * OperatingDaysPerWeek) + min(deltaDays-deltaWeeks*7,OperatingDaysPerWeek)
+        
         AllSales = sum(SalesSummary[salesum]['Sales'] for salesum in SalesSummary)
-        Days = len(SalesSummary)
         avgcustomers = round(AllCustomers/Days) if Days > 0 else 0
         avgprofit = round(AllProfit/Days) if Days > 0 else 0
         avgitemssold = round(AllSales/Days) if Days > 0 else 0
