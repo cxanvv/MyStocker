@@ -37,6 +37,7 @@ class Gui(ttk.Frame):
         self.nb.add(self.StockFrame,text='Stock')
         self.nb.add(self.SaleHFrame,text='Sale History')
         self.nb.add(self.SettingsFrame,text='Settings')
+        self.nb.bind("<<NotebookTabChanged>>", self.script.NotebookTabChange)
 
         # STOCK
         self.StockSearchBar = ttk.Entry(master=self.StockFrame)
